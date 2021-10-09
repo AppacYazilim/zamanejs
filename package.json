@@ -1,6 +1,6 @@
 {
   "name": "zamanejs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "dist/zamane.js",
   "types": "dist/zamane.d.ts",
