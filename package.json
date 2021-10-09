@@ -1,0 +1,25 @@
+{
+  "name": "zamanejs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/zamane.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AppacYazilim/zamanejs.git"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "AppacYazilim",
+  "license": "MIT",
+  "dependencies": {
+    "hasbin": "^1.2.3",
+    "jszip": "^3.7.1"
+  },
+  "devDependencies": {
+    "@types/hasbin": "^1.2.0",
+    "@types/node": "^16.10.3"
+  }
+}
