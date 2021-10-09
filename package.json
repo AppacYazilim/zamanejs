@@ -1,6 +1,6 @@
 {
   "name": "zamanejs",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
   "main": "dist/zamane.js",
   "types": "dist/zamane.d.ts",
@@ -12,7 +12,10 @@
     "build": "tsc"
   },
   "keywords": [
-    "zamane", "zamanejs", "time stamp", "timestamp"
+    "zamane",
+    "zamanejs",
+    "time stamp",
+    "timestamp"
   ],
   "author": "AppacYazilim",
   "license": "MIT",
