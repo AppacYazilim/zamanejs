@@ -146,8 +146,7 @@ class Zamane {
         fs.unlinkSync(tempFilePath);
 
         // reac the stamp file
-        const stampContents = fs.readFileSync(stampFile).toString();
-
+        const stampContents = fs.readFileSync(stampFile);
 
         // remove stamp file
         fs.unlinkSync(stampFile);
