@@ -128,6 +128,21 @@ class Zamane {
     }
 
 
+    private async putBufferToTempFile(contents: Buffer) {
+        const tempLocation: string = this.getTempFilePathOnFilesystem();
+
+        // get random file name
+        const randomFileName = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+
+        const tempFilePath = `${tempLocation}/${randomFileName}.txt`;
+
+        fs.writeFileSync(tempFilePath, contents);
+
+        return tempFilePath;;
+    }
+
+
     // get timestamp from zamane
     public async stampContents(contents: string) {
         // check if zamane is installed
@@ -147,7 +162,7 @@ class Zamane {
 
         // reac the stamp file
         const stampContents = fs.readFileSync(stampFile);
-
+        
         // remove stamp file
         fs.unlinkSync(stampFile);
 
@@ -169,7 +184,7 @@ class Zamane {
         return filePath + ".zd";
     }
 
-    public async checkStampOfContents(contents: string, stampContens: string) {
+    public async checkStampOfContents(contents: string, stampContens: Buffer) {
             // check if zamane is installed
         const zamaneInstalled = this.checkZamaneExists();
         if (!zamaneInstalled) {
@@ -180,7 +195,7 @@ class Zamane {
         const tempFilePath = await this.putContentsToTempFile(contents);
 
         // put stamp to temp location as file
-        const tempStampFilePath = await this.putContentsToTempFile(stampContens);
+        const tempStampFilePath = await this.putBufferToTempFile(stampContens);
 
         const isStampValid = await this.checkStampOfFile(tempFilePath, tempStampFilePath);
 
