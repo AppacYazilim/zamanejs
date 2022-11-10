@@ -4,6 +4,7 @@ import child_process from 'child_process';
 import util from 'util';
 import hasbin from 'hasbin';
 import https from 'https';
+import os from 'os';
 
 const exec = util.promisify(child_process.exec);
 
@@ -103,10 +104,10 @@ class Zamane {
 
     // get temp file path
     private getTempFilePathOnFilesystem() {
-        const tempLocation: string = '/tmp/zamanejs';
+        const tempLocation: string = os.type() == 'Windows_NT' ? 'C:/tmp/zamanejs' : '/tmp/zamanejs';
 
         if(!fs.existsSync(tempLocation)) {
-            fs.mkdirSync(tempLocation);
+            fs.mkdirSync(tempLocation, { recursive: true });
         }
 
         return tempLocation;
