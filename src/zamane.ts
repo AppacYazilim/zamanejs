@@ -8,6 +8,10 @@ import os from 'os';
 
 const execFile = util.promisify(child_process.execFile);
 
+const TSS_DOWNLOAD_URL =
+  process.env.TSS_DOWNLOAD_URL ??
+  'https://kamusm.bilgem.tubitak.gov.tr/urunler/zaman_damgasi/dosyalar/tss-client-console-3.1.17.zip';
+
 export interface ZamaneCredentials {
   tssAddress: string;
   tssPort: string;
@@ -51,17 +55,24 @@ class Zamane {
   }
 
   private async downloadZamane() {
-    const zamaneZIpUrl =
-      'https://kamusm.bilgem.tubitak.gov.tr/urunler/zaman_damgasi/dosyalar/tss-client-console-3.1.17.zip';
-
     // Download the zip file
 
-    const zamaneZipFile = await this.downloadFile(zamaneZIpUrl);
+    const zamaneZipFile = await this.downloadFile(TSS_DOWNLOAD_URL);
 
     // Unzip the file
 
     const zamaneZip = await JSZip.loadAsync(zamaneZipFile);
-    const zamaneFile = zamaneZip.file('tss-client-console-3.1.17.jar');
+
+    // Get the fist file with the .jar extension in zip
+
+    const jarFile = Object.keys(zamaneZip.files).find((file) => file.endsWith('.jar'));
+
+    if (!jarFile) {
+      throw new Error('Zamane file not found');
+    }
+
+    // Extract the
+    const zamaneFile = zamaneZip.file(jarFile);
 
     if (!zamaneFile) {
       throw new Error('Zamane file not found');
