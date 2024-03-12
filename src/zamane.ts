@@ -249,7 +249,7 @@ class Zamane {
     //
     // Kalan kredi: 249
 
-    const kredi = /Kalan kredi\: (?<kredi>\d+)/.exec(stdout);
+    const kredi = /Kalan kredi: (?<kredi>\d+)/.exec(stdout);
 
     if (!kredi || !kredi.groups) {
       throw new Error('Zamane kredi check failed');
