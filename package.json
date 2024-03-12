@@ -21,6 +21,7 @@
   "scripts": {
     "build": "swc --out-dir dist src",
     "typechecks": "tsc --noEmit",
+    "clean": "rimraf build && rimraf dist",
     "release": "semantic-release",
     "bundle": "unbuild",
     "lint": "eslint ."
