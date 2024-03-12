@@ -1,3 +1,10 @@
+## [1.0.8](https://github.com/AppacYazilim/zamanejs/compare/v1.0.7...v1.0.8) (2024-03-12)
+
+
+### Bug Fixes
+
+* **code:** move zamane download url to a constant and make it updatable ([#14](https://github.com/AppacYazilim/zamanejs/issues/14)) ([adf7345](https://github.com/AppacYazilim/zamanejs/commit/adf73457541c11fcf0911e8157ae954149a533d7))
+
 ## [1.0.7](https://github.com/AppacYazilim/zamanejs/compare/v1.0.6...v1.0.7) (2024-03-12)
 
 
