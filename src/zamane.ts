@@ -21,7 +21,7 @@ class Zamane {
   // downloads file with given url
 
   private async downloadFile(url: string): Promise<Buffer> {
-    const data = await new Promise<Buffer>((resolve, reject) => {
+    return new Promise<Buffer>((resolve, reject) => {
       https.get(url, (res) => {
         let body = '';
         res.setEncoding('binary');
@@ -36,8 +36,6 @@ class Zamane {
         res.on('error', reject);
       });
     });
-
-    return data;
   }
 
   constructor(credentials: ZamaneCredentials) {
