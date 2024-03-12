@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/swcrc",
+  "minify": true,
+  "jsc": {
+    "parser": {
+      "syntax": "typescript",
+      "dynamicImport": false,
+      "decorators": false
+    },
+    "target": "esnext"
+  }
+}

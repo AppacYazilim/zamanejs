@@ -9,7 +9,9 @@
     "url": "https://github.com/AppacYazilim/zamanejs.git"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "swc --out-dir dist src",
+    "typechecks": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "keywords": [
     "zamane",
@@ -24,7 +26,74 @@
     "jszip": "^3.7.1"
   },
   "devDependencies": {
+    "@swc/cli": "^0.3.10",
+    "@swc/core": "^1.4.6",
     "@types/hasbin": "^1.2.0",
-    "@types/node": "^16.10.3"
+    "@types/node": "^16.10.3",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.2"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:prettier/recommended"
+    ],
+    "plugins": [
+      "@typescript-eslint/eslint-plugin"
+    ],
+    "parserOptions": {
+      "sourceType": "module",
+      "ecmaVersion": "latest",
+      "project": "tsconfig.json",
+      "ecmaFeatures": {
+        "jsx": false
+      }
+    },
+    "env": {
+      "browser": false
+    },
+    "rules": {
+      "no-process-env": "error",
+      "no-unused-expressions": "warn",
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn"
+      ],
+      "no-unreachable": "warn",
+      "eol-last": [
+        "error",
+        "always"
+      ]
+    },
+    "ignorePatterns": [
+      "build/",
+      "node_modules/",
+      "**/*.js"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "vite.config.ts"
+        ],
+        "parserOptions": {
+          "project": "tsconfig.node.json"
+        }
+      }
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "none",
+    "tabWidth": 2,
+    "useTabs": false,
+    "printWidth": 115,
+    "editor.formatOnSave": true
   }
 }
