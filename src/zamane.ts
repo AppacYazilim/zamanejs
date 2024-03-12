@@ -182,7 +182,7 @@ class Zamane {
     return filePath + '.zd';
   }
 
-  public async checkStampOfContents(contents: string, stampContens: Buffer) {
+  public async checkStampOfContents(contents: string, stampContents: Buffer) {
     // check if zamane is installed
     const zamaneInstalled = this.checkZamaneExists();
     if (!zamaneInstalled) {
@@ -193,7 +193,7 @@ class Zamane {
     const tempFilePath = await this.putContentsToTempFile(contents);
 
     // put stamp to temp location as file
-    const tempStampFilePath = await this.putBufferToTempFile(stampContens);
+    const tempStampFilePath = await this.putBufferToTempFile(stampContents);
 
     const isStampValid = await this.checkStampOfFile(tempFilePath, tempStampFilePath);
 
