@@ -1,3 +1,10 @@
+## [1.0.7](https://github.com/AppacYazilim/zamanejs/compare/v1.0.6...v1.0.7) (2024-03-12)
+
+
+### Bug Fixes
+
+* **code:** Test ([295e4f7](https://github.com/AppacYazilim/zamanejs/commit/295e4f740d4516b2e4c391c9c64a90cc60b808a1))
+
 ## [1.0.6](https://github.com/AppacYazilim/zamanejs/compare/v1.0.5...v1.0.6) (2024-03-12)
 
 
