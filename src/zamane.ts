@@ -253,9 +253,7 @@ class Zamane {
       throw new Error('Zamane kredi check failed');
     }
 
-    const krediNumber = parseInt(kredi.groups.kredi);
-
-    return krediNumber;
+    return parseInt(kredi.groups.kredi);
   }
 }
 
