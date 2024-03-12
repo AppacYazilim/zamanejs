@@ -5,7 +5,7 @@ import util from 'util';
 import hasbin from 'hasbin';
 import https from 'https';
 
-const exec = util.promisify(child_process.exec);
+const execFile = util.promisify(child_process.execFile);
 
 export interface ZamaneCredentials {
     tssAddress: string,
@@ -91,9 +91,8 @@ class Zamane {
         if (!zamaneFileExists) {
             throw new Error('Zamane file not found');
         }
-
-        const zamaneCommand = `java -jar ${zamaneFilePath} ${args.join(' ')}`;
-        const { stdout, stderr } = await exec(zamaneCommand);
+        
+        const { stdout, stderr } = await execFile("java", ["-jar", zamaneFilePath, ...args]);
         return { stdout, stderr };
     }
 
