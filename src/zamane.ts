@@ -1,271 +1,99 @@
 import fs from 'fs';
-import JSZip from 'jszip';
-import child_process from 'child_process';
-import util from 'util';
-import hasbin from 'hasbin';
-import https from 'https';
-import os from 'os';
+import { ZamaneCredentials } from './credentials';
+import {
+  FileNotReadableError,
+  InvalidHexError,
+  TssAdressNotHttpOrHttpsError,
+  TssAdressNotParsableError
+} from './errors/invalidCredentialsError';
+import { createHash } from 'crypto';
+import { HashingAlgorithm } from './hashingAlgoritms';
+import { TimeStampRequest } from './TimeStampRequest';
+import { tssRequest } from './http_utils';
 
-const execFile = util.promisify(child_process.execFile);
+export class Zamane {
+  private readonly hashAlgorithm: HashingAlgorithm;
 
-const TSS_DOWNLOAD_URL =
-  process.env.TSS_DOWNLOAD_URL ??
-  'https://kamusm.bilgem.tubitak.gov.tr/urunler/zaman_damgasi/dosyalar/tss-client-console-3.1.17.zip';
+  constructor(private readonly credentials: ZamaneCredentials) {
+    const server = this.credentials.tssAddress;
 
-export interface ZamaneCredentials {
-  tssAddress: string;
-  tssPort: string;
-  customerNo: string;
-  customerPassword: string;
-}
+    try {
+      const serverUrl = new URL(server);
 
-class Zamane {
-  private credentials: ZamaneCredentials;
+      if (serverUrl.protocol !== 'http:' && serverUrl.protocol !== 'https:') {
+        throw new TssAdressNotHttpOrHttpsError();
+      }
+    } catch (error) {
+      throw new TssAdressNotParsableError();
+    }
 
-  // downloads file with given url
+    this.hashAlgorithm = credentials.hashAlgorithm;
+  }
 
-  private async downloadFile(url: string): Promise<Buffer> {
-    return new Promise<Buffer>((resolve, reject) => {
-      https.get(url, (res) => {
-        let body = '';
-        res.setEncoding('binary');
-        res.on('data', (data) => {
-          body += data;
+  async hashFromPath(filePath: string): Promise<Buffer> {
+    return new Promise((resolve, reject) => {
+      // Ensure the hash instance is created with the specified algorithm.
+
+      fs.open(filePath, 'r', (error, fd) => {
+        if (error) {
+          reject(new FileNotReadableError());
+          return;
+        }
+
+        const stream = fs.createReadStream('', {
+          fd: fd,
+          autoClose: true
         });
 
-        res.on('end', () => {
-          resolve(Buffer.from(body, 'binary'));
+        const hash = createHash(this.hashAlgorithm);
+
+        stream.on('data', (chunk) => {
+          hash.update(chunk);
         });
 
-        res.on('error', reject);
+        stream.on('end', () => {
+          // When the stream ends, finalize the hash and resolve the promise.
+          const fileHash = hash.digest();
+          resolve(fileHash);
+        });
+
+        stream.on('error', (error) => {
+          // In case of an error reading the file, reject the promise.
+          reject(error);
+        });
       });
     });
   }
-
-  constructor(credentials: ZamaneCredentials) {
-    this.credentials = credentials;
-
-    if (!this.checkJavaInstalled()) {
-      throw new Error('Java must be installed on $PATH');
-    }
+  async hashFromContent(content: Buffer): Promise<Buffer> {
+    return new Promise((resolve) => {
+      const hash = createHash(this.hashAlgorithm);
+      hash.update(content);
+      resolve(hash.digest());
+    });
+  }
+  async hashFromString(content: string): Promise<Buffer> {
+    return new Promise((resolve) => {
+      const hash = createHash(this.hashAlgorithm);
+      hash.update(content);
+      resolve(hash.digest());
+    });
   }
 
-  private checkJavaInstalled() {
-    return hasbin.sync('java');
-  }
-
-  private async downloadZamane() {
-    // Download the zip file
-
-    const zamaneZipFile = await this.downloadFile(TSS_DOWNLOAD_URL);
-
-    // Unzip the file
-
-    const zamaneZip = await JSZip.loadAsync(zamaneZipFile);
-
-    // Get the fist file with the .jar extension in zip
-
-    const jarFile = Object.keys(zamaneZip.files).find((file) => file.endsWith('.jar'));
-
-    if (!jarFile) {
-      throw new Error('Zamane file not found');
+  static hexToArrayBuffer(hash: string): Uint8Array {
+    // check if the hash is a valid hex string
+    if (!/^[0-9A-Fa-f]{2,}$/.test(hash)) {
+      throw new InvalidHexError();
     }
 
-    // Extract the
-    const zamaneFile = zamaneZip.file(jarFile);
-
-    if (!zamaneFile) {
-      throw new Error('Zamane file not found');
-    }
-    // Save the file
-
-    const zamaneFileData = await zamaneFile.async('nodebuffer');
-    const zamaneFilePath = this.getZamaneJarLocation();
-
-    fs.writeFileSync(zamaneFilePath, zamaneFileData);
+    return new Uint8Array(hash.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
   }
 
-  // check if zamane already exists
-  public checkZamaneExists() {
-    const zamaneFilePath = this.getZamaneJarLocation();
-    return fs.existsSync(zamaneFilePath);
-  }
-
-  private async runZamane(args: string[]) {
-    const zamaneFilePath = this.getZamaneJarLocation();
-    const zamaneFileExists = this.checkZamaneExists();
-    if (!zamaneFileExists) {
-      throw new Error('Zamane file not found');
-    }
-
-    const { stdout, stderr } = await execFile('java', ['-jar', zamaneFilePath, ...args]);
-    return { stdout, stderr };
-  }
-
-  private getZamaneJarLocation() {
-    return this.getTempFilePathOnFilesystem() + '/zamane.jar';
-  }
-
-  // get temp file path
-  private getTempFilePathOnFilesystem() {
-    const tempLocation: string = os.type() == 'Windows_NT' ? 'C:/tmp/zamanejs' : '/tmp/zamanejs';
-
-    if (!fs.existsSync(tempLocation)) {
-      fs.mkdirSync(tempLocation, { recursive: true });
-    }
-
-    return tempLocation;
-  }
-
-  // put contents to temp location as file
-  private async putContentsToTempFile(contents: string) {
-    const tempLocation: string = this.getTempFilePathOnFilesystem();
-
-    // get random file name
-    const randomFileName =
-      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
-    const tempFilePath = `${tempLocation}/${randomFileName}.txt`;
-
-    fs.writeFileSync(tempFilePath, contents);
-
-    return tempFilePath;
-  }
-
-  private async putBufferToTempFile(contents: Buffer) {
-    const tempLocation: string = this.getTempFilePathOnFilesystem();
-
-    // get random file name
-    const randomFileName =
-      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
-    const tempFilePath = `${tempLocation}/${randomFileName}.txt`;
-
-    fs.writeFileSync(tempFilePath, contents);
-
-    return tempFilePath;
-  }
-
-  // get timestamp from zamane
-  public async stampContents(contents: string) {
-    // check if zamane is installed
-    const zamaneInstalled = this.checkZamaneExists();
-    if (!zamaneInstalled) {
-      await this.downloadZamane();
-    }
-
-    // put contents to temp location as file
-    const tempFilePath = await this.putContentsToTempFile(contents);
-
-    // get timestamp from zamane
-    const stampFile = await this.stampFile(tempFilePath);
-
-    // remove temp file
-    fs.unlinkSync(tempFilePath);
-
-    // reac the stamp file
-    const stampContents = fs.readFileSync(stampFile);
-
-    // remove stamp file
-    fs.unlinkSync(stampFile);
-
-    return stampContents;
-  }
-
-  public async stampFile(filePath: string) {
-    // check if zamane is installed
-    const zamaneInstalled = this.checkZamaneExists();
-    if (!zamaneInstalled) {
-      await this.downloadZamane();
-    }
-
-    // get timestamp from zamane
-    const { stdout, stderr } = await this.runZamane([
-      '-Z',
-      filePath,
-      this.credentials.tssAddress,
-      this.credentials.tssPort,
-      this.credentials.customerNo,
-      this.credentials.customerPassword,
-      'SHA256'
-    ]);
-
-    return filePath + '.zd';
-  }
-
-  public async checkStampOfContents(contents: string, stampContents: Buffer) {
-    // check if zamane is installed
-    const zamaneInstalled = this.checkZamaneExists();
-    if (!zamaneInstalled) {
-      await this.downloadZamane();
-    }
-
-    // put contents to temp location as file
-    const tempFilePath = await this.putContentsToTempFile(contents);
-
-    // put stamp to temp location as file
-    const tempStampFilePath = await this.putBufferToTempFile(stampContents);
-
-    const isStampValid = await this.checkStampOfFile(tempFilePath, tempStampFilePath);
-
-    // remove temp file
-    fs.unlinkSync(tempFilePath);
-
-    // remove temp file
-    fs.unlinkSync(tempStampFilePath);
-
-    return isStampValid;
-  }
-
-  public async checkStampOfFile(file: string, stampFile: string | null = null) {
-    // check if zamane is installed
-    const zamaneInstalled = this.checkZamaneExists();
-    if (!zamaneInstalled) {
-      await this.downloadZamane();
-    }
-
-    if (stampFile === null) {
-      stampFile = file + '.zd';
-    }
-
-    // check if zamane has enough credit
-    const { stdout, stderr } = await this.runZamane(['-C', file, stampFile]);
-
-    if (stdout.includes('Zaman Damgasi gecerli, dosya degismemis.')) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  public async checkCredit() {
-    // check if zamane is installed
-    const zamaneInstalled = this.checkZamaneExists();
-    if (!zamaneInstalled) {
-      await this.downloadZamane();
-    }
-
-    // check if zamane has enough credit
-    const { stdout, stderr } = await this.runZamane([
-      '-k',
-      this.credentials.tssAddress,
-      this.credentials.tssPort,
-      this.credentials.customerNo,
-      this.credentials.customerPassword
-    ]);
-
-    // example output of zamane -k command
-    //
-    // Kalan kredi: 249
-
-    const kredi = /Kalan kredi: (?<kredi>\d+)/.exec(stdout);
-
-    if (!kredi || !kredi.groups) {
-      throw new Error('Zamane kredi check failed');
-    }
-
-    return parseInt(kredi.groups.kredi);
+  public async timeStampRequest(hash: Uint8Array): Promise<Buffer> {
+    // create a new TimeStampRequest
+    const request = new TimeStampRequest(this.hashAlgorithm, hash);
+    // get the ASN.1 payload
+    const payload = request.getAsn1Payload();
+    // send the request to the TSS server
+    return await tssRequest(this.credentials.tssAddress, Buffer.from(payload));
   }
 }
-
-export default Zamane;

@@ -1,12 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/swcrc",
-  "minify": true,
   "jsc": {
     "parser": {
-      "syntax": "typescript",
-      "dynamicImport": false,
-      "decorators": false
+      "syntax": "typescript"
     },
     "target": "esnext"
-  }
+  },
+  "module": {
+    "type": "es6"
+  },
+  "sourceMaps": "inline"
 }
