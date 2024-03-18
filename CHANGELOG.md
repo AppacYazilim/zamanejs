@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/AppacYazilim/zamanejs/compare/v1.0.9...v2.0.0) (2024-03-18)
+
+
+### Performance Improvements
+
+* **code:** trigger build ([7c9e618](https://github.com/AppacYazilim/zamanejs/commit/7c9e6186eea076ee9a3acaf340a3d59839d680d1))
+
+
+### BREAKING CHANGES
+
+* **code:** This breaks old api
+
 ## [1.0.9](https://github.com/AppacYazilim/zamanejs/compare/v1.0.8...v1.0.9) (2024-03-18)
 
 
