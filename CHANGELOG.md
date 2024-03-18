@@ -1,3 +1,10 @@
+## [2.0.1](https://github.com/AppacYazilim/zamanejs/compare/v2.0.0...v2.0.1) (2024-03-18)
+
+
+### Bug Fixes
+
+* **code:** should validate hash length for algoritm ([#22](https://github.com/AppacYazilim/zamanejs/issues/22)) ([6fb27b9](https://github.com/AppacYazilim/zamanejs/commit/6fb27b9a2a66b9f2a19f1581126712aeb6e614ae))
+
 # [2.0.0](https://github.com/AppacYazilim/zamanejs/compare/v1.0.9...v2.0.0) (2024-03-18)
 
 
