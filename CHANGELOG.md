@@ -1,3 +1,10 @@
+## [1.0.9](https://github.com/AppacYazilim/zamanejs/compare/v1.0.8...v1.0.9) (2024-03-18)
+
+
+### Bug Fixes
+
+* **code:** trigger build ([218200b](https://github.com/AppacYazilim/zamanejs/commit/218200bb160c9a51afd1c9cc5c6577bc7787063f))
+
 ## [1.0.8](https://github.com/AppacYazilim/zamanejs/compare/v1.0.7...v1.0.8) (2024-03-12)
 
 
