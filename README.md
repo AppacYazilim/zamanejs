@@ -1,6 +1,18 @@
 # ZamaneJS
 ZamaneJS is a JavaScript implementation of the Zamane timestamping service. It provides a simple and easy-to-use API for interacting with the Zamane service.
 
+[![Jest](https://github.com/AppacYazilim/zamanejs/actions/workflows/tests.yml/badge.svg?branch=main&event=push)](https://github.com/AppacYazilim/zamanejs/actions/workflows/tests.yml)
+[![npm](https://img.shields.io/npm/v/zamanejs)](https://www.npmjs.com/package/zamanejs)
+[![npm](https://img.shields.io/npm/dt/zamanejs)](https://www.npmjs.com/package/zamanejs)
+
+[![GitHub issues](https://img.shields.io/github/issues/AppacYazilim/zamanejs)](https://github.com/AppacYazilim/zamanejs/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/AppacYazilim/zamanejs)](https://github.com/AppacYazilim/zamanejs/pulls)
+[![GitHub](https://img.shields.io/github/license/AppacYazilim/zamanejs)](https://github.com/AppacYazilim/zamanejs/blob/main/LICENSE)
+
+[![GitHub watchers](https://img.shields.io/github/watchers/AppacYazilim/zamanejs?style=social)](https://github.com/AppacYazilim/zamanejs/watchers)
+[![GitHub Repo stars](https://img.shields.io/github/stars/AppacYazilim/zamanejs?style=social)](https://github.com/AppacYazilim/zamanejs/stargazers)
+
+
 I'n theory this is just a basic implementation of RFC3161 but since there are some small changes 
 necessary for Zamane to work, I've decided to create a separate package. See [ZamaneFix](src/utils/zamaneZdFix.ts) file for the details.
 
