@@ -1,5 +1,6 @@
 import { ZamaneCredentials } from './credentials';
 import { Zamane } from './zamane';
+import { HashLengthError } from './errors/HashLengthError';
 
 describe('Zamane Tests', () => {
   it('should request a timestamp', async () => {
@@ -19,6 +20,21 @@ describe('Zamane Tests', () => {
     expect(timestamp).toBeDefined();
 
     // TODO: Validate the timestamp
+  });
+
+  it('should error when invalid hash length', async () => {
+    const credentials = {
+      hashAlgorithm: 'SHA-256',
+      tssAddress: 'http://tsa.e-tugra.com'
+    } satisfies ZamaneCredentials;
+
+    const zamane = new Zamane(credentials);
+
+    const invalidHash = new Uint8Array(64);
+
+    const timestampPromise = zamane.timeStampRequest(invalidHash);
+
+    await expect(timestampPromise).rejects.toThrow(HashLengthError);
   });
 
   it('should error on invalid server', async () => {

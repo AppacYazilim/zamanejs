@@ -7,9 +7,10 @@ import {
   TssAdressNotParsableError
 } from './errors/invalidCredentialsError';
 import { createHash } from 'crypto';
-import { HashingAlgorithm } from './hashingAlgoritms';
+import { hashByteLength, HashingAlgorithm } from './hashingAlgoritms';
 import { TimeStampRequest } from './TimeStampRequest';
 import { tssRequest } from './http_utils';
+import { HashLengthError } from './errors/HashLengthError';
 
 export class Zamane {
   private readonly hashAlgorithm: HashingAlgorithm;
@@ -89,6 +90,12 @@ export class Zamane {
   }
 
   public async timeStampRequest(hash: Uint8Array): Promise<Buffer> {
+    const expectedLength = hashByteLength[this.hashAlgorithm];
+
+    if (hash.length !== expectedLength) {
+      throw new HashLengthError(hash, expectedLength);
+    }
+
     // create a new TimeStampRequest
     const request = new TimeStampRequest(this.hashAlgorithm, hash);
     // get the ASN.1 payload
