@@ -1,3 +1,10 @@
+## [2.0.2](https://github.com/AppacYazilim/zamanejs/compare/v2.0.1...v2.0.2) (2024-04-05)
+
+
+### Bug Fixes
+
+* **devops:** Create dependency-review.yml ([b3fd05b](https://github.com/AppacYazilim/zamanejs/commit/b3fd05b1ca8f30c3cd15897d9de7f22045d9a8fa))
+
 ## [2.0.1](https://github.com/AppacYazilim/zamanejs/compare/v2.0.0...v2.0.1) (2024-03-18)
 
 
