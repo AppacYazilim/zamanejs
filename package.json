@@ -25,6 +25,7 @@
     "release": "semantic-release",
     "bundle": "unbuild",
     "lint": "eslint .",
+    "sariflint": "eslint . --format @microsoft/eslint-formatter-sarif --output-file eslint-results.sarif",
     "test": "jest"
   },
   "keywords": [
@@ -39,6 +40,7 @@
     "asn1-ts": "^8.0.2"
   },
   "devDependencies": {
+    "@microsoft/eslint-formatter-sarif": "^3.0.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^12.0.0",
     "@semantic-release/git": "^10.0.1",
