@@ -1,3 +1,10 @@
+## [2.0.5](https://github.com/AppacYazilim/zamanejs/compare/v2.0.4...v2.0.5) (2024-04-05)
+
+
+### Bug Fixes
+
+* **devops:** Fixed eslint github reporting ([18d05df](https://github.com/AppacYazilim/zamanejs/commit/18d05df6d252968b8599a57d5c633ce50fd67b21))
+
 ## [2.0.4](https://github.com/AppacYazilim/zamanejs/compare/v2.0.3...v2.0.4) (2024-04-05)
 
 
