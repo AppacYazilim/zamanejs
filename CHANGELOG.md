@@ -1,3 +1,10 @@
+## [2.0.4](https://github.com/AppacYazilim/zamanejs/compare/v2.0.3...v2.0.4) (2024-04-05)
+
+
+### Bug Fixes
+
+* **devops:** Update lint.yml ([215c309](https://github.com/AppacYazilim/zamanejs/commit/215c3097a6c344203329c16c9fb423fe79756303))
+
 ## [2.0.3](https://github.com/AppacYazilim/zamanejs/compare/v2.0.2...v2.0.3) (2024-04-05)
 
 
