@@ -1,3 +1,10 @@
+## [2.0.6](https://github.com/AppacYazilim/zamanejs/compare/v2.0.5...v2.0.6) (2024-04-11)
+
+
+### Bug Fixes
+
+* **devops:** Fixed eslint runner version ([907aca9](https://github.com/AppacYazilim/zamanejs/commit/907aca91000b949478137555fe82576309ef6829))
+
 ## [2.0.5](https://github.com/AppacYazilim/zamanejs/compare/v2.0.4...v2.0.5) (2024-04-05)
 
 
