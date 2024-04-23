@@ -13,6 +13,7 @@ export class TimeStampRequest {
     if (getRandomValues) {
       return getRandomValues(abv);
     }
+    // This is a fallback for environments that do not have a secure random number generator
 
     console.warn('Using insecure random number generator. Please update the node.js version to 0.18 or later.');
     // Since this is just generating nonce, it is not that critical if the environment does not have a secure random number generator
@@ -86,7 +87,7 @@ export class TimeStampRequest {
 
   generateNonce(): Uint8Array {
     const randomBytes = new Uint8Array(8);
-    getRandomValues(randomBytes);
+    this.getRandomValues(randomBytes);
     return randomBytes;
   }
 
