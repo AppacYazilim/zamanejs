@@ -25,7 +25,7 @@ jobs:
     strategy:
       matrix:
         node: [ 16, 18, 20 ]
-    name: Node ${{ matrix.node }} tests
+    name: Node ${{ matrix.node }} tests on Windows
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
