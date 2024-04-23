@@ -53,4 +53,28 @@ describe('TimeStampRequest Tests', () => {
     }).toString();
     expect(out).toBe(snapshotOut);
   });
+
+  it('should generate random values', () => {
+    // Arrange
+    const hashAlgorithm = 'SHA-256';
+    const hashValue = new Uint8Array([1, 2, 3, 4, 5]);
+    const request = new TimeStampRequest(hashAlgorithm, hashValue);
+
+    // Act
+    const nonce = new Uint8Array(8);
+    request.getRandomValues(nonce);
+
+    // Assert
+    expect(nonce).toBeDefined();
+
+    // make sure the nonce is not all zeros
+    let allZeros = true;
+    for (let i = 0; i < nonce.length; i++) {
+      if (nonce[i] !== 0) {
+        allZeros = false;
+        break;
+      }
+    }
+    expect(allZeros).toBe(false);
+  });
 });
