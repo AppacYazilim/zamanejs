@@ -9,6 +9,21 @@ export class TimeStampRequest {
     protected nonce: Uint8Array | null = null
   ) {}
 
+  getRandomValues(abv: Uint8Array) {
+    if (getRandomValues) {
+      return getRandomValues(abv);
+    }
+
+    console.warn('Using insecure random number generator. Please update the node.js version to 0.18 or later.');
+    // Since this is just generating nonce, it is not that critical if the environment does not have a secure random number generator
+
+    let l = abv.length;
+    while (l--) {
+      abv[l] = Math.floor(Math.random() * 256);
+    }
+    return abv;
+  }
+
   public getAsn1Payload(): Uint8Array {
     // Constructing the ASN.1 structure
     const requestPayload = new DERElement();
