@@ -7,7 +7,7 @@ import {
   TssAdressNotParsableError
 } from './errors/invalidCredentialsError';
 import { createHash } from 'crypto';
-import { hashByteLength, HashingAlgorithm } from './hashingAlgoritms';
+import { hashAlgorithmNodeJS, hashByteLength, HashingAlgorithm } from './hashingAlgoritms';
 import { TimeStampRequest } from './TimeStampRequest';
 import { tssRequest } from './http_utils';
 import { HashLengthError } from './errors/HashLengthError';
@@ -46,7 +46,7 @@ export class Zamane {
           autoClose: true
         });
 
-        const hash = createHash(this.hashAlgorithm);
+        const hash = createHash(hashAlgorithmNodeJS[this.hashAlgorithm]);
 
         stream.on('data', (chunk) => {
           hash.update(chunk);
@@ -67,14 +67,14 @@ export class Zamane {
   }
   async hashFromContent(content: Buffer): Promise<Buffer> {
     return new Promise((resolve) => {
-      const hash = createHash(this.hashAlgorithm);
+      const hash = createHash(hashAlgorithmNodeJS[this.hashAlgorithm]);
       hash.update(content);
       resolve(hash.digest());
     });
   }
   async hashFromString(content: string): Promise<Buffer> {
     return new Promise((resolve) => {
-      const hash = createHash(this.hashAlgorithm);
+      const hash = createHash(hashAlgorithmNodeJS[this.hashAlgorithm]);
       hash.update(content);
       resolve(hash.digest());
     });
