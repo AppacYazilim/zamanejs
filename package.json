@@ -121,5 +121,8 @@
     "useTabs": false,
     "printWidth": 115,
     "editor.formatOnSave": true
+  },
+  "engines": {
+    "node": ">=16"
   }
 }
