@@ -6,11 +6,31 @@ on:
 jobs:
   test:
     runs-on: "ubuntu-latest"
+    strategy:
+      matrix:
+        node: [ 16, 18, 20 ]
+    name: Node ${{ matrix.node }} tests
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version-file: '.nvmrc'
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+      - name: Install yarn
+        run: npm ci
+      - name: Run the tests
+        run: npm run test
+  windows-test:
+    runs-on: "windows-latest"
+    strategy:
+      matrix:
+        node: [ 16, 18, 20 ]
+    name: Node ${{ matrix.node }} tests on Windows
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
           cache: 'npm'
       - name: Install yarn
         run: npm ci

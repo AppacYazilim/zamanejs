@@ -11,3 +11,8 @@ export const hashByteLength: Record<HashingAlgorithm, number> = {
   'SHA-256': 32,
   'SHA-512': 64
 };
+
+export const hashAlgorithmNodeJS: Record<HashingAlgorithm, string> = {
+  'SHA-256': 'sha256',
+  'SHA-512': 'sha512'
+};
