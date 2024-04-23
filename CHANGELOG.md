@@ -1,3 +1,10 @@
+## [2.0.7](https://github.com/AppacYazilim/zamanejs/compare/v2.0.6...v2.0.7) (2024-04-23)
+
+
+### Bug Fixes
+
+* **tests:** Add windows tests ([#45](https://github.com/AppacYazilim/zamanejs/issues/45)) ([2a0df5e](https://github.com/AppacYazilim/zamanejs/commit/2a0df5e8f73df76870d105669357a3fe80eac031)), closes [#36](https://github.com/AppacYazilim/zamanejs/issues/36)
+
 ## [2.0.6](https://github.com/AppacYazilim/zamanejs/compare/v2.0.5...v2.0.6) (2024-04-11)
 
 
