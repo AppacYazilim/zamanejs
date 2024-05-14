@@ -1,3 +1,10 @@
+## [2.0.8](https://github.com/AppacYazilim/zamanejs/compare/v2.0.7...v2.0.8) (2024-05-14)
+
+
+### Bug Fixes
+
+* **tests:** Update the test timeout on long running tests ([#56](https://github.com/AppacYazilim/zamanejs/issues/56)) ([17c9fab](https://github.com/AppacYazilim/zamanejs/commit/17c9fabd3ca22133cfd7957520b7c3ee6705f361))
+
 ## [2.0.7](https://github.com/AppacYazilim/zamanejs/compare/v2.0.6...v2.0.7) (2024-04-23)
 
 
