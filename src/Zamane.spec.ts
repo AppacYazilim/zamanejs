@@ -20,7 +20,9 @@ describe('Zamane Tests', () => {
     expect(timestamp).toBeDefined();
 
     // TODO: Validate the timestamp
-  });
+  }, 30000);
+  // Increase the timeout to 30 seconds for this test.
+  // Test timestamp servers can be slow.
 
   it('should error when invalid hash length', async () => {
     const credentials = {
