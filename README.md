@@ -109,6 +109,25 @@ zamane.timeStampRequest(hash).then(timestamp => {
 });
 ```
 
+### Authentication and transport errors
+
+When supplied, `customerNo` and `customerPassword` are sent using HTTP Basic
+authentication. Omit both for an unauthenticated TSA. This authentication scheme
+must be supported by your provider; it is not a provider-specific Zamane identity
+token. Both HTTP and HTTPS are supported. Prefer HTTPS when available: Basic
+authentication over HTTP does not encrypt the credentials.
+
+`requestTimeoutMs` optionally sets a total request deadline (default: 30000 ms).
+`timeStampRequest` rejects non-200 responses, unexpected or missing
+`application/timestamp-reply` content types, empty responses, responses over
+10 MiB, and interrupted or timed-out requests. Redirects are not followed.
+Transport response errors are exported as `TssRequestError`, with `statusCode`
+when available. Errors do not include the response body or credentials.
+
+The returned Buffer is the raw RFC 3161 response, **not a verified timestamp**.
+Callers must still check the RFC 3161 status, message imprint, nonce, signature
+and certificate trust before treating it as evidence.
+
 ## License
 
 ZamaneJS is licensed under the MIT License. See the `LICENSE` file for more details.

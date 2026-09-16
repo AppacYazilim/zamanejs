@@ -10,11 +10,14 @@ type ZamaneServerCredentials = {
    */
   tssAddress: string;
   hashAlgorithm: HashingAlgorithm;
+  /** Total request deadline in milliseconds. Defaults to 30000. */
+  requestTimeoutMs?: number;
 };
 
 export type ZamaneCredentials =
   | ({
       customerNo: string;
+      /** Sent with customerNo using HTTP Basic authentication. HTTPS is recommended. */
       customerPassword: string;
     } & ZamaneServerCredentials)
   | ZamaneServerCredentials;

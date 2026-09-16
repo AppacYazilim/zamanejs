@@ -11,6 +11,7 @@ import { hashAlgorithmNodeJS, hashByteLength, HashingAlgorithm } from './hashing
 import { TimeStampRequest } from './TimeStampRequest';
 import { tssRequest } from './http_utils';
 import { HashLengthError } from './errors/HashLengthError';
+export { TssRequestError } from './errors/TssRequestError';
 
 export class Zamane {
   private readonly hashAlgorithm: HashingAlgorithm;
@@ -29,6 +30,29 @@ export class Zamane {
     }
 
     this.hashAlgorithm = credentials.hashAlgorithm;
+    const hasCustomerNo = 'customerNo' in credentials;
+    const hasPassword = 'customerPassword' in credentials;
+    if (hasCustomerNo || hasPassword) {
+      if (
+        !hasCustomerNo ||
+        !hasPassword ||
+        typeof credentials.customerNo !== 'string' ||
+        typeof credentials.customerPassword !== 'string' ||
+        credentials.customerNo.length === 0 ||
+        credentials.customerPassword.length === 0 ||
+        credentials.customerNo.includes(':')
+      ) {
+        throw new Error('HTTP Basic authentication requires a customerNo without colons and a customerPassword');
+      }
+    }
+    if (
+      credentials.requestTimeoutMs !== undefined &&
+      (!Number.isInteger(credentials.requestTimeoutMs) ||
+        credentials.requestTimeoutMs <= 0 ||
+        credentials.requestTimeoutMs > 2147483647)
+    ) {
+      throw new Error('requestTimeoutMs must be an integer between 1 and 2147483647');
+    }
   }
 
   async hashFromPath(filePath: string): Promise<Buffer> {
@@ -101,6 +125,12 @@ export class Zamane {
     // get the ASN.1 payload
     const payload = request.getAsn1Payload();
     // send the request to the TSS server
-    return await tssRequest(this.credentials.tssAddress, Buffer.from(payload));
+    return await tssRequest(this.credentials.tssAddress, Buffer.from(payload), {
+      authentication:
+        'customerNo' in this.credentials && 'customerPassword' in this.credentials
+          ? { customerNo: this.credentials.customerNo, customerPassword: this.credentials.customerPassword }
+          : undefined,
+      timeoutMs: this.credentials.requestTimeoutMs
+    });
   }
 }
