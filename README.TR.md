@@ -95,6 +95,25 @@ zamane.timeStampRequest(hash).then(timestamp => {
 });
 ```
 
+### Kimlik doğrulama ve bağlantı hataları
+
+`customerNo` ve `customerPassword` verildiğinde HTTP Basic doğrulamasıyla
+gönderilir. Doğrulama gerektirmeyen sunucular için iki alanı da atlayın. Servis
+sağlayıcınız bu yöntemi desteklemelidir; sağlayıcıya özel Zamane kimlik belirteci
+üretilmez. HTTP ve HTTPS desteklenir. Mümkünse HTTPS tercih edin: HTTP üzerinden
+Basic doğrulama, hesap bilgilerini şifrelemez.
+
+`requestTimeoutMs` toplam istek süresini sınırlar (varsayılan: 30000 ms).
+`timeStampRequest`; 200 dışındaki HTTP durumlarını, eksik veya beklenmeyen
+`application/timestamp-reply` içerik türünü, boş yanıtları, 10 MiB üzerindeki
+yanıtları ve kesilen/zaman aşımına uğrayan istekleri reddeder. Yönlendirmeler
+izlenmez. Yanıt hataları dışa aktarılan `TssRequestError` ile, mevcutsa
+`statusCode` alanıyla döner. Hatalara yanıt gövdesi veya hesap bilgileri eklenmez.
+
+Dönen Buffer ham RFC 3161 yanıtıdır; **doğrulanmış zaman damgası değildir**.
+Kanıt olarak kullanılmadan önce RFC 3161 durumu, veri özeti, nonce, imza ve
+sertifika güveni ayrıca doğrulanmalıdır.
+
 ## Lisans
 
 ZamaneJS, MIT Lisansı altında lisanslanmıştır. Daha fazla detay için `LICENSE` dosyasına bakınız.
