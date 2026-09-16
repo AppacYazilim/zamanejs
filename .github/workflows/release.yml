@@ -16,7 +16,7 @@ jobs:
       contents: write # to be able to publish a GitHub release
       issues: write # to be able to comment on released issues
       pull-requests: write # to be able to comment on released pull requests
-      id-token: write # to enable use of OIDC for npm provenance
+      id-token: write # for npm trusted publishing and provenance
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,13 +27,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
-          cache: 'npm'
       - name: Install dependencies
         run: npm clean-install
       - name: Bundle
         run: npm run bundle
+      - name: Check release configuration
+        run: npm run test:release
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PUSH_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm run release
