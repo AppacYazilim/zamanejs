@@ -1,3 +1,11 @@
+## [2.0.9](https://github.com/AppacYazilim/zamanejs/compare/v2.0.8...v2.0.9) (2026-09-16)
+
+
+### Bug Fixes
+
+* **release:** publish npm packages with OIDC trusted publishing ([#115](https://github.com/AppacYazilim/zamanejs/issues/115)) ([4be4acd](https://github.com/AppacYazilim/zamanejs/commit/4be4acd2ad59a1cc530e782dcac16915416c224b))
+* send TSA credentials and reject HTTP error responses ([#113](https://github.com/AppacYazilim/zamanejs/issues/113)) ([b543a84](https://github.com/AppacYazilim/zamanejs/commit/b543a849c22b6901996d26c7236db029c672b28a))
+
 ## [2.0.8](https://github.com/AppacYazilim/zamanejs/compare/v2.0.7...v2.0.8) (2024-05-14)
 
 
