@@ -116,6 +116,18 @@ function checkSignerPurpose(certificate: pkijs.Certificate, generationTime: Date
   ) {
     fail('Timestamp signer certificate lacks critical timeStamping-only usage');
   }
+  const keyUsage = certificate.extensions?.find((extension) => extension.extnID === '2.5.29.15');
+  if (keyUsage) {
+    const bits = keyUsage.parsedValue;
+    // RFC 5280 permits digitalSignature and/or contentCommitment for time stamping.
+    if (
+      !(bits instanceof asn1js.BitString) ||
+      !bits.valueBlock.valueHexView.length ||
+      (bits.valueBlock.valueHexView[0] & 0xc0) === 0
+    ) {
+      fail('Timestamp signer certificate KeyUsage forbids signing');
+    }
+  }
   if (
     !Number.isFinite(generationTime.getTime()) ||
     generationTime < certificate.notBefore.value ||
@@ -153,11 +165,37 @@ async function checkEssCertificate(
       algorithm = crypto.getAlgorithmByOID(oid.valueBlock.toString(), true).name;
       hashIndex = 1;
     }
+    if (fields.length < hashIndex + 1 || fields.length > hashIndex + 2) {
+      fail('Invalid SigningCertificate identifier fields');
+    }
     const certHash = fields[hashIndex];
     if (!(certHash instanceof asn1js.OctetString)) fail('Invalid SigningCertificate hash');
     const actual = new Uint8Array(await crypto.digest(algorithm, certificate.toSchema().toBER(false)));
     if (!equalBytes(actual, certHash.valueBlock.valueHexView))
       fail('Timestamp signer certificate does not match ESS identifier');
+
+    if (fields.length === hashIndex + 2) {
+      const schema = fields[hashIndex + 1];
+      if (!(schema instanceof asn1js.Sequence) || schema.valueBlock.value.length !== 2) {
+        fail('Invalid ESS issuerSerial');
+      }
+      let issuerSerial: pkijs.IssuerSerial;
+      try {
+        issuerSerial = new pkijs.IssuerSerial({ schema });
+      } catch {
+        return fail('Invalid ESS issuerSerial');
+      }
+      const names = issuerSerial.issuer.names;
+      if (
+        names.length !== 1 ||
+        names[0].type !== 4 ||
+        !(names[0].value instanceof pkijs.RelativeDistinguishedNames) ||
+        !names[0].value.isEqual(certificate.issuer) ||
+        !issuerSerial.serialNumber.isEqual(certificate.serialNumber)
+      ) {
+        fail('Timestamp ESS issuerSerial does not match signer certificate');
+      }
+    }
   }
 }
 

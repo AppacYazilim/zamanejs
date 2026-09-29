@@ -21,6 +21,30 @@ function changeResponse(change: (parsed: pkijs.TimeStampResp) => void): Buffer {
   return Buffer.from(parsed.toSchema().toBER(false));
 }
 
+function changeSignedData(change: (signed: pkijs.SignedData) => void): Buffer {
+  return changeResponse((parsed) => {
+    const signed = new pkijs.SignedData({ schema: parsed.timeStampToken!.content });
+    change(signed);
+    parsed.timeStampToken!.content = signed.toSchema();
+  });
+}
+
+function changeEssIdentifier(
+  change: (fields: asn1js.BaseBlock[], certificate: pkijs.Certificate) => void
+): Buffer {
+  return changeSignedData((signed) => {
+    const certificate = signed.certificates!.find(
+      (item): item is pkijs.Certificate => item instanceof pkijs.Certificate
+    )!;
+    const attribute = signed.signerInfos[0].signedAttrs!.attributes.find(
+      (item) => item.type === '1.2.840.113549.1.9.16.2.47'
+    )!;
+    const certs = (attribute.values[0] as asn1js.Sequence).valueBlock.value[0] as asn1js.Sequence;
+    const identifier = certs.valueBlock.value[0] as asn1js.Sequence;
+    change(identifier.valueBlock.value, certificate);
+  });
+}
+
 describe('RFC 3161 response verification', () => {
   it('verifies an externally supplied TSR through the public package API', async () => {
     const expected = { hashAlgorithm: 'SHA-256' as const, hash, nonce };
@@ -62,6 +86,93 @@ describe('RFC 3161 response verification', () => {
         'SHA-256'
       )
     ).resolves.toBeUndefined();
+  });
+
+  it('rejects signer certificates whose KeyUsage forbids timestamp signing', async () => {
+    const restricted = changeSignedData((signed) => {
+      const certificate = signed.certificates!.find(
+        (item): item is pkijs.Certificate => item instanceof pkijs.Certificate
+      )!;
+      const keyUsage = certificate.extensions!.find((extension) => extension.extnID === '2.5.29.15')!;
+      const bits = new asn1js.BitString({ valueHex: new Uint8Array([0x20]).buffer }); // keyEncipherment only
+      keyUsage.extnValue = new asn1js.OctetString({ valueHex: bits.toBER(false) });
+      keyUsage.parsedValue = bits;
+      signed.certificates![signed.certificates!.indexOf(certificate)] = new pkijs.Certificate({
+        schema: asn1js.fromBER(certificate.toSchema(true).toBER(false)).result
+      });
+    });
+    await expect(verifyTimeStampResponse(restricted, hash, nonce, 'SHA-256')).rejects.toThrow(
+      'KeyUsage forbids signing'
+    );
+  });
+
+  it('accepts a matching ESS issuerSerial before checking the CMS signature', async () => {
+    const withIssuer = changeEssIdentifier((fields, certificate) => {
+      fields.push(
+        new pkijs.IssuerSerial({
+          issuer: new pkijs.GeneralNames({
+            names: [new pkijs.GeneralName({ type: 4, value: certificate.issuer })]
+          }),
+          serialNumber: certificate.serialNumber
+        }).toSchema()
+      );
+    });
+    // This test mutates a signed attribute without re-signing, so it must reach the signature check and fail there.
+    await expect(verifyTimeStampResponse(withIssuer, hash, nonce, 'SHA-256')).rejects.toThrow(
+      'CMS signature is invalid'
+    );
+  });
+
+  it('rejects mismatched or malformed ESS issuerSerial fields', async () => {
+    const wrongSerial = changeEssIdentifier((fields, certificate) => {
+      fields.push(
+        new pkijs.IssuerSerial({
+          issuer: new pkijs.GeneralNames({
+            names: [new pkijs.GeneralName({ type: 4, value: certificate.issuer })]
+          }),
+          serialNumber: new asn1js.Integer({ value: 98765 })
+        }).toSchema()
+      );
+    });
+    await expect(verifyTimeStampResponse(wrongSerial, hash, nonce, 'SHA-256')).rejects.toThrow(
+      'ESS issuerSerial does not match'
+    );
+    const otherRootPem = fixture('other-root.pem').toString('utf8');
+    const otherRootDer = Buffer.from(
+      otherRootPem.replace(/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\s/g, ''),
+      'base64'
+    );
+    const otherRoot = new pkijs.Certificate({ schema: asn1js.fromBER(otherRootDer).result });
+    const wrongIssuer = changeEssIdentifier((fields, certificate) => {
+      fields.push(
+        new pkijs.IssuerSerial({
+          issuer: new pkijs.GeneralNames({
+            names: [new pkijs.GeneralName({ type: 4, value: otherRoot.issuer })]
+          }),
+          serialNumber: certificate.serialNumber
+        }).toSchema()
+      );
+    });
+    await expect(verifyTimeStampResponse(wrongIssuer, hash, nonce, 'SHA-256')).rejects.toThrow(
+      'ESS issuerSerial does not match'
+    );
+    const extraFields = changeEssIdentifier((fields) => fields.push(new asn1js.Null(), new asn1js.Null()));
+    await expect(verifyTimeStampResponse(extraFields, hash, nonce, 'SHA-256')).rejects.toThrow(
+      'Invalid SigningCertificate identifier fields'
+    );
+    const malformedIssuer = changeEssIdentifier((fields, certificate) => {
+      const identifier = new pkijs.IssuerSerial({
+        issuer: new pkijs.GeneralNames({
+          names: [new pkijs.GeneralName({ type: 4, value: certificate.issuer })]
+        }),
+        serialNumber: certificate.serialNumber
+      }).toSchema();
+      identifier.valueBlock.value.push(new asn1js.Null());
+      fields.push(identifier);
+    });
+    await expect(verifyTimeStampResponse(malformedIssuer, hash, nonce, 'SHA-256')).rejects.toThrow(
+      'Invalid ESS issuerSerial'
+    );
   });
 
   it('rejects an unrelated CA', async () => {
