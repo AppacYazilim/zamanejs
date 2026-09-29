@@ -95,6 +95,23 @@ zamane.timeStampRequest(hash).then(timestamp => {
 });
 ```
 
+Nonce değerini TSA isteğinden önce kaydetmek için isteğe bağlı ikinci parametre
+olarak 8–32 baytlık bir `Buffer` veya `Uint8Array` verin:
+
+```javascript
+import { randomBytes } from 'node:crypto';
+
+const nonce = randomBytes(16);
+await saveNonce(nonce); // İstekten önce veri özetiyle birlikte saklayın.
+const timestamp = await zamane.timeStampRequest(hash, nonce);
+// RFC 3161 yanıtını çözümleyip nonce değerini kaydedilen değerle karşılaştırın.
+```
+
+Nonce, işaretsiz RFC 3161 INTEGER olarak kodlanır. DER gereksiz baştaki sıfırları
+atar ve gerektiğinde pozitif işaret baytı ekler. Verilen baytlar sıfırla
+başlıyorsa çözülmüş tamsayı değerlerini karşılaştırın. İkinci parametre
+verilmezse nonce otomatik üretilir. Metot ham yanıtı yine `Buffer` olarak döndürür.
+
 ### Kimlik doğrulama ve bağlantı hataları
 
 `customerNo` ve `customerPassword` verildiğinde HTTP Basic doğrulamasıyla

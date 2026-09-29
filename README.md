@@ -109,6 +109,24 @@ zamane.timeStampRequest(hash).then(timestamp => {
 });
 ```
 
+To save the nonce before contacting the TSA, pass 8 to 32 bytes as the optional
+second argument:
+
+```javascript
+import { randomBytes } from 'node:crypto';
+
+const nonce = randomBytes(16);
+await saveNonce(nonce); // Persist it with the document hash before the request.
+const timestamp = await zamane.timeStampRequest(hash, nonce);
+// Decode the RFC 3161 reply and compare its nonce with the saved value.
+```
+
+`Buffer` and `Uint8Array` are accepted. The nonce is an unsigned RFC 3161
+INTEGER: DER removes redundant leading zero bytes and adds a sign byte when
+needed. Compare decoded integer values if the supplied bytes begin with zero.
+Without a nonce argument, ZamaneJS continues to generate one automatically.
+The method still returns the raw response as a `Buffer`.
+
 ### Authentication and transport errors
 
 When supplied, `customerNo` and `customerPassword` are sent using HTTP Basic
