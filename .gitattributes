@@ -1,0 +1,2 @@
+# The offline RFC 3161 fixture signs these exact bytes, including its LF terminator.
+src/fixtures/timestamp-verification/original.txt -text

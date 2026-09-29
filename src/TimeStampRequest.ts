@@ -1,6 +1,6 @@
 import { HashingAlgorithm, oidForHashingAlgorithms } from './hashingAlgoritms';
 import * as asn1Ts from 'asn1-ts';
-import { getRandomValues } from 'node:crypto';
+import { randomFillSync } from 'node:crypto';
 
 // asn1-ts is CommonJS; native Node ESM exposes its exports on the default namespace.
 const asn1 = (asn1Ts as typeof asn1Ts & { default?: typeof asn1Ts }).default ?? asn1Ts;
@@ -24,20 +24,8 @@ export class TimeStampRequest {
     return Uint8Array.from(this.nonce);
   }
 
-  getRandomValues(abv: Uint8Array) {
-    if (getRandomValues) {
-      return getRandomValues(abv);
-    }
-    // This is a fallback for environments that do not have a secure random number generator
-
-    console.warn('Using insecure random number generator. Please update the node.js version to 0.18 or later.');
-    // Since this is just generating nonce, it is not that critical if the environment does not have a secure random number generator
-
-    let l = abv.length;
-    while (l--) {
-      abv[l] = Math.floor(Math.random() * 256);
-    }
-    return abv;
+  getRandomValues(abv: Uint8Array): Uint8Array {
+    return randomFillSync(abv);
   }
 
   public getAsn1Payload(): Uint8Array {
