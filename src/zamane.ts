@@ -11,7 +11,11 @@ import { hashAlgorithmNodeJS, hashByteLength, HashingAlgorithm } from './hashing
 import { TimeStampRequest } from './TimeStampRequest';
 import { tssRequest } from './http_utils';
 import { HashLengthError } from './errors/HashLengthError';
-import { prepareTimeStampCa, verifyTimeStampResponse } from './TimeStampVerification';
+import {
+  prepareTimeStampCa,
+  TimeStampVerificationError,
+  verifyTimeStampResponse as verifyResponse
+} from './TimeStampVerification';
 import type { TimeStampVerificationOptions } from './TimeStampVerification';
 export { TssRequestError } from './errors/TssRequestError';
 export { TimeStampVerificationError } from './TimeStampVerification';
@@ -142,7 +146,34 @@ export class Zamane {
           : undefined,
       timeoutMs: this.credentials.requestTimeoutMs
     });
-    await verifyTimeStampResponse(response, expectedHash, request.getNonce(), this.hashAlgorithm, trustedCas);
+    await verifyResponse(response, expectedHash, request.getNonce(), this.hashAlgorithm, trustedCas);
     return response;
   }
+}
+
+/** Values saved with the original request, used to verify an existing .tsr without contacting a TSA. */
+export type TimeStampResponseVerificationInput = TimeStampVerificationOptions & {
+  hashAlgorithm: HashingAlgorithm;
+  hash: Uint8Array;
+  nonce: Uint8Array;
+};
+
+/** Verify a saved RFC 3161 response against the original hash and nonce. */
+export async function verifyTimeStampResponse(
+  response: Uint8Array,
+  expected: TimeStampResponseVerificationInput
+): Promise<void> {
+  const expectedLength = hashByteLength[expected.hashAlgorithm];
+  if (expected.hash.length !== expectedLength) throw new HashLengthError(expected.hash, expectedLength);
+  if (!(expected.nonce instanceof Uint8Array) || !expected.nonce.length) {
+    throw new TimeStampVerificationError('Original request nonce is required');
+  }
+  const trustedCas = prepareTimeStampCa(expected.ca);
+  await verifyResponse(
+    response,
+    Uint8Array.from(expected.hash),
+    Uint8Array.from(expected.nonce),
+    expected.hashAlgorithm,
+    trustedCas
+  );
 }

@@ -148,6 +148,45 @@ Provision CA certificates from an independently trusted source. Revocation
 status is not fetched or checked automatically, and applications must decide
 whether the TSA policy and timestamp time are acceptable for their evidence.
 
+### Verifying a timestamp file received from elsewhere
+
+An existing `.tsr` file can be checked offline without a `Zamane` instance, TSA
+credentials, or a new timestamp request. Use the **exact original file bytes**,
+the hash algorithm used in the request, and the nonce saved when that request
+was sent:
+
+```javascript
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { verifyTimeStampResponse } from 'zamanejs';
+
+const original = readFileSync('document.pdf');
+const tsr = readFileSync('received.tsr');
+const nonce = readFileSync('request-nonce.bin'); // Nonce from the original request.
+const hash = createHash('sha256').update(original).digest();
+
+await verifyTimeStampResponse(tsr, {
+  hashAlgorithm: 'SHA-256',
+  hash,
+  nonce,
+  ca: readFileSync('trusted-tsa-root.pem')
+});
+// Resolves only when the response and its signer chain pass verification.
+```
+
+If you only need the cryptographic checks and do not have a trusted CA, omit
+`ca`:
+
+```javascript
+await verifyTimeStampResponse(tsr, { hashAlgorithm: 'SHA-256', hash, nonce });
+```
+
+Without `ca`, signer identity is not trusted. Obtain the expected nonce from
+the original request or its saved metadata; copying a nonce out of the `.tsr`
+itself cannot prove that the response belongs to your request. Verification
+fails if the expected nonce is missing or does not match. This API does not
+contact the TSA or check certificate revocation.
+
 ### Authentication and transport errors
 
 When supplied, `customerNo` and `customerPassword` are sent using HTTP Basic

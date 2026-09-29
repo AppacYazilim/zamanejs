@@ -5,6 +5,7 @@ import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
 import { DERElement } from 'asn1-ts';
 import { prepareTimeStampCa, TimeStampVerificationError, verifyTimeStampResponse } from './TimeStampVerification';
+import { verifyTimeStampResponse as verifySavedResponse } from './zamane';
 
 const fixture = (name: string) => readFileSync(join(__dirname, 'fixtures', 'timestamp-verification', name));
 const original = fixture('original.txt');
@@ -21,6 +22,21 @@ function changeResponse(change: (parsed: pkijs.TimeStampResp) => void): Buffer {
 }
 
 describe('RFC 3161 response verification', () => {
+  it('verifies an externally supplied TSR through the public package API', async () => {
+    const expected = { hashAlgorithm: 'SHA-256' as const, hash, nonce };
+    await expect(verifySavedResponse(response, expected)).resolves.toBeUndefined();
+    await expect(verifySavedResponse(response, { ...expected, ca: fixture('root.pem') })).resolves.toBeUndefined();
+    const wrongNonce = Buffer.from(nonce);
+    wrongNonce[0] ^= 1;
+    await expect(verifySavedResponse(response, { ...expected, nonce: wrongNonce })).rejects.toThrow('nonce');
+    await expect(
+      verifySavedResponse(response, { ...expected, nonce: undefined as unknown as Uint8Array })
+    ).rejects.toThrow('Original request nonce is required');
+    await expect(verifySavedResponse(response, { ...expected, ca: fixture('other-root.pem') })).rejects.toThrow(
+      TimeStampVerificationError
+    );
+  });
+
   it('verifies an offline signed response with and without a CA', async () => {
     await expect(verifyTimeStampResponse(response, hash, nonce, 'SHA-256')).resolves.toBeUndefined();
     await expect(

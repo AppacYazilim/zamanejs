@@ -134,6 +134,45 @@ bağımsız ve güvenilir bir kaynaktan sağlayın. İptal durumu otomatik olara
 sorgulanmaz; TSA politikası ve zamanının kabul edilebilirliği uygulama
 tarafından değerlendirilmelidir.
 
+### Dışarıdan alınan bir zaman damgası dosyasını doğrulama
+
+Mevcut bir `.tsr` dosyasını `Zamane` nesnesi, TSA hesap bilgileri veya yeni bir
+zaman damgası isteği olmadan çevrimdışı doğrulayabilirsiniz. **Orijinal dosyanın
+aynı baytlarını**, istekteki özet algoritmasını ve istek gönderilirken kaydedilen
+nonce değerini kullanın:
+
+```javascript
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { verifyTimeStampResponse } from 'zamanejs';
+
+const original = readFileSync('belge.pdf');
+const tsr = readFileSync('gelen.tsr');
+const nonce = readFileSync('istek-nonce.bin'); // Orijinal istekteki nonce.
+const hash = createHash('sha256').update(original).digest();
+
+await verifyTimeStampResponse(tsr, {
+  hashAlgorithm: 'SHA-256',
+  hash,
+  nonce,
+  ca: readFileSync('guvenilen-tsa-kok.pem')
+});
+// Yanıt ve imzalayanın sertifika zinciri doğrulanırsa tamamlanır.
+```
+
+Güvenilen CA sertifikanız yoksa yalnızca kriptografik kontroller için `ca`
+alanını atlayın:
+
+```javascript
+await verifyTimeStampResponse(tsr, { hashAlgorithm: 'SHA-256', hash, nonce });
+```
+
+CA olmadan imzalayanın kimliği güvenilir sayılmaz. Beklenen nonce değerini
+orijinal istekten veya o sırada saklanan kayıttan alın. Yalnızca `.tsr`
+içindeki nonce değerini kullanmak, yanıtın sizin isteğinize ait olduğunu
+kanıtlamaz. Beklenen nonce eksikse veya eşleşmiyorsa doğrulama başarısız olur.
+Bu API TSA'ya bağlanmaz ve sertifika iptal durumunu sorgulamaz.
+
 ### Kimlik doğrulama ve bağlantı hataları
 
 `customerNo` ve `customerPassword` verildiğinde HTTP Basic doğrulamasıyla
