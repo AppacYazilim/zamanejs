@@ -38,7 +38,9 @@
   "author": "AppacYazilim",
   "license": "MIT",
   "dependencies": {
-    "asn1-ts": "^8.0.2"
+    "asn1-ts": "^8.0.2",
+    "asn1js": "3.0.10",
+    "pkijs": "3.4.1"
   },
   "devDependencies": {
     "@microsoft/eslint-formatter-sarif": "^3.0.0",
@@ -102,6 +104,7 @@
     },
     "ignorePatterns": [
       "build/",
+      "dist/",
       "node_modules/",
       "**/*.js"
     ],

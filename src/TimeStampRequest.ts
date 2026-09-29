@@ -1,32 +1,31 @@
 import { HashingAlgorithm, oidForHashingAlgorithms } from './hashingAlgoritms';
-import { ASN1Construction, ASN1TagClass, ASN1UniversalType, DERElement, ObjectIdentifier } from 'asn1-ts';
-import { getRandomValues } from 'node:crypto';
+import * as asn1Ts from 'asn1-ts';
+import { randomFillSync } from 'node:crypto';
+
+// asn1-ts is CommonJS; native Node ESM exposes its exports on the default namespace.
+const asn1 = (asn1Ts as typeof asn1Ts & { default?: typeof asn1Ts }).default ?? asn1Ts;
+const { ASN1Construction, ASN1TagClass, ASN1UniversalType, DERElement, ObjectIdentifier } = asn1;
 
 export class TimeStampRequest {
+  protected nonce: Uint8Array;
+
   constructor(
     protected hashAlgorithm: HashingAlgorithm,
     protected hashValue: Uint8Array,
-    protected nonce?: Uint8Array
+    nonce?: Uint8Array
   ) {
     if (nonce !== undefined && (!(nonce instanceof Uint8Array) || nonce.length < 8 || nonce.length > 32)) {
       throw new TypeError('Nonce must be a Uint8Array containing 8 to 32 bytes');
     }
+    this.nonce = Uint8Array.from(nonce ?? this.generateNonce());
   }
 
-  getRandomValues(abv: Uint8Array) {
-    if (getRandomValues) {
-      return getRandomValues(abv);
-    }
-    // This is a fallback for environments that do not have a secure random number generator
+  getNonce(): Uint8Array {
+    return Uint8Array.from(this.nonce);
+  }
 
-    console.warn('Using insecure random number generator. Please update the node.js version to 0.18 or later.');
-    // Since this is just generating nonce, it is not that critical if the environment does not have a secure random number generator
-
-    let l = abv.length;
-    while (l--) {
-      abv[l] = Math.floor(Math.random() * 256);
-    }
-    return abv;
+  getRandomValues(abv: Uint8Array): Uint8Array {
+    return randomFillSync(abv);
   }
 
   public getAsn1Payload(): Uint8Array {
@@ -77,10 +76,7 @@ export class TimeStampRequest {
     // RFC 3161 encodes the nonce as a positive INTEGER, not as an OCTET STRING.
     // Converting unsigned bytes to BigInt lets DER handle a leading zero sign byte
     // when the high bit is set and discard redundant leading zero bytes.
-    nonce.integer = (this.nonce ?? this.generateNonce()).reduce(
-      (value, byte) => value * BigInt(256) + BigInt(byte),
-      BigInt(0)
-    );
+    nonce.integer = this.nonce.reduce((value, byte) => value * BigInt(256) + BigInt(byte), BigInt(0));
 
     // RequestedCertificate BOOLEAN
     const requestedCertificate = new DERElement();

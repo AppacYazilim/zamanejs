@@ -11,7 +11,15 @@ import { hashAlgorithmNodeJS, hashByteLength, HashingAlgorithm } from './hashing
 import { TimeStampRequest } from './TimeStampRequest';
 import { tssRequest } from './http_utils';
 import { HashLengthError } from './errors/HashLengthError';
+import {
+  prepareTimeStampCa,
+  TimeStampVerificationError,
+  verifyTimeStampResponse as verifyResponse
+} from './TimeStampVerification';
+import type { TimeStampVerificationOptions } from './TimeStampVerification';
 export { TssRequestError } from './errors/TssRequestError';
+export { TimeStampVerificationError } from './TimeStampVerification';
+export type { TimeStampVerificationOptions } from './TimeStampVerification';
 
 export class Zamane {
   private readonly hashAlgorithm: HashingAlgorithm;
@@ -113,24 +121,59 @@ export class Zamane {
     return new Uint8Array(hash.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
   }
 
-  public async timeStampRequest(hash: Uint8Array, nonce?: Uint8Array): Promise<Buffer> {
+  public async timeStampRequest(
+    hash: Uint8Array,
+    nonce?: Uint8Array,
+    verification: TimeStampVerificationOptions = {}
+  ): Promise<Buffer> {
     const expectedLength = hashByteLength[this.hashAlgorithm];
 
     if (hash.length !== expectedLength) {
       throw new HashLengthError(hash, expectedLength);
     }
 
+    const trustedCas = prepareTimeStampCa(verification.ca);
+    const expectedHash = Uint8Array.from(hash);
     // create a new TimeStampRequest
-    const request = new TimeStampRequest(this.hashAlgorithm, hash, nonce);
+    const request = new TimeStampRequest(this.hashAlgorithm, expectedHash, nonce);
     // get the ASN.1 payload
     const payload = request.getAsn1Payload();
     // send the request to the TSS server
-    return await tssRequest(this.credentials.tssAddress, Buffer.from(payload), {
+    const response = await tssRequest(this.credentials.tssAddress, Buffer.from(payload), {
       authentication:
         'customerNo' in this.credentials && 'customerPassword' in this.credentials
           ? { customerNo: this.credentials.customerNo, customerPassword: this.credentials.customerPassword }
           : undefined,
       timeoutMs: this.credentials.requestTimeoutMs
     });
+    await verifyResponse(response, expectedHash, request.getNonce(), this.hashAlgorithm, trustedCas);
+    return response;
   }
+}
+
+/** Values saved with the original request, used to verify an existing .tsr without contacting a TSA. */
+export type TimeStampResponseVerificationInput = TimeStampVerificationOptions & {
+  hashAlgorithm: HashingAlgorithm;
+  hash: Uint8Array;
+  nonce: Uint8Array;
+};
+
+/** Verify a saved RFC 3161 response against the original hash and nonce. */
+export async function verifyTimeStampResponse(
+  response: Uint8Array,
+  expected: TimeStampResponseVerificationInput
+): Promise<void> {
+  const expectedLength = hashByteLength[expected.hashAlgorithm];
+  if (expected.hash.length !== expectedLength) throw new HashLengthError(expected.hash, expectedLength);
+  if (!(expected.nonce instanceof Uint8Array) || !expected.nonce.length) {
+    throw new TimeStampVerificationError('Original request nonce is required');
+  }
+  const trustedCas = prepareTimeStampCa(expected.ca);
+  await verifyResponse(
+    response,
+    Uint8Array.from(expected.hash),
+    Uint8Array.from(expected.nonce),
+    expected.hashAlgorithm,
+    trustedCas
+  );
 }

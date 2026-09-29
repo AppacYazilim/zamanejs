@@ -115,14 +115,77 @@ import { randomBytes } from 'node:crypto';
 const nonce = randomBytes(16);
 await saveNonce(nonce); // Persist it with the document hash before the request.
 const timestamp = await zamane.timeStampRequest(hash, nonce);
-// Decode the RFC 3161 reply and compare its nonce with the saved value.
+// The returned response has already passed the nonce, imprint and signature checks.
 ```
 
 `Buffer` and `Uint8Array` are accepted. The nonce is an unsigned RFC 3161
 INTEGER: DER removes redundant leading zero bytes and adds a sign byte when
 needed. Compare decoded integer values if the supplied bytes begin with zero.
-Without a nonce argument, ZamaneJS continues to generate one automatically.
-The method still returns the raw response as a `Buffer`.
+Without a nonce argument, ZamaneJS continues to generate one automatically and
+checks that same nonce in the reply. The method still returns the raw response
+as a `Buffer`.
+
+### Timestamp verification and optional CA
+
+`timeStampRequest` returns only after checking the RFC 3161 status, SHA-256 or
+SHA-512 message imprint, nonce, CMS signature, signer certificate binding, and
+the signer's critical time-stamping usage. Failed checks reject with
+`TimeStampVerificationError`.
+
+Supply a trusted TSA CA certificate to also require a valid certificate chain:
+
+```javascript
+import { readFileSync } from 'node:fs';
+
+const ca = readFileSync('trusted-tsa-root.pem');
+const timestamp = await zamane.timeStampRequest(hash, nonce, { ca });
+```
+
+`ca` accepts PEM text, a PEM certificate bundle, or DER bytes. The CA is
+optional; without it the token's cryptographic signature is checked against its
+embedded signer certificate, but the signer's identity is **not trusted**.
+Provision CA certificates from an independently trusted source. Revocation
+status is not fetched or checked automatically, and applications must decide
+whether the TSA policy and timestamp time are acceptable for their evidence.
+
+### Verifying a timestamp file received from elsewhere
+
+An existing `.tsr` file can be checked offline without a `Zamane` instance, TSA
+credentials, or a new timestamp request. Use the **exact original file bytes**,
+the hash algorithm used in the request, and the nonce saved when that request
+was sent:
+
+```javascript
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { verifyTimeStampResponse } from 'zamanejs';
+
+const original = readFileSync('document.pdf');
+const tsr = readFileSync('received.tsr');
+const nonce = readFileSync('request-nonce.bin'); // Nonce from the original request.
+const hash = createHash('sha256').update(original).digest();
+
+await verifyTimeStampResponse(tsr, {
+  hashAlgorithm: 'SHA-256',
+  hash,
+  nonce,
+  ca: readFileSync('trusted-tsa-root.pem')
+});
+// Resolves only when the response and its signer chain pass verification.
+```
+
+If you only need the cryptographic checks and do not have a trusted CA, omit
+`ca`:
+
+```javascript
+await verifyTimeStampResponse(tsr, { hashAlgorithm: 'SHA-256', hash, nonce });
+```
+
+Without `ca`, signer identity is not trusted. Obtain the expected nonce from
+the original request or its saved metadata; copying a nonce out of the `.tsr`
+itself cannot prove that the response belongs to your request. Verification
+fails if the expected nonce is missing or does not match. This API does not
+contact the TSA or check certificate revocation.
 
 ### Authentication and transport errors
 
@@ -139,9 +202,8 @@ authentication over HTTP does not encrypt the credentials.
 Transport response errors are exported as `TssRequestError`, with `statusCode`
 when available. Errors do not include the response body or credentials.
 
-The returned Buffer is the raw RFC 3161 response, **not a verified timestamp**.
-Callers must still check the RFC 3161 status, message imprint, nonce, signature
-and certificate trust before treating it as evidence.
+The returned Buffer contains the original RFC 3161 response bytes. Supplying
+`ca` is necessary when the application requires a trusted TSA identity.
 
 ## License
 
