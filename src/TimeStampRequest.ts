@@ -6,8 +6,12 @@ export class TimeStampRequest {
   constructor(
     protected hashAlgorithm: HashingAlgorithm,
     protected hashValue: Uint8Array,
-    protected nonce: Uint8Array | null = null
-  ) {}
+    protected nonce?: Uint8Array
+  ) {
+    if (nonce !== undefined && (!(nonce instanceof Uint8Array) || nonce.length < 8 || nonce.length > 32)) {
+      throw new TypeError('Nonce must be a Uint8Array containing 8 to 32 bytes');
+    }
+  }
 
   getRandomValues(abv: Uint8Array) {
     if (getRandomValues) {
@@ -70,8 +74,13 @@ export class TimeStampRequest {
     // Nonce INTEGER
     const nonce = new DERElement();
     nonce.tagNumber = ASN1UniversalType.integer;
-    // Assuming nonce is a large number, use BigInt and convert to bytes
-    nonce.integer = BigInt('0x' + this.uint8tohex(this.nonce ?? this.generateNonce()));
+    // RFC 3161 encodes the nonce as a positive INTEGER, not as an OCTET STRING.
+    // Converting unsigned bytes to BigInt lets DER handle a leading zero sign byte
+    // when the high bit is set and discard redundant leading zero bytes.
+    nonce.integer = (this.nonce ?? this.generateNonce()).reduce(
+      (value, byte) => value * BigInt(256) + BigInt(byte),
+      BigInt(0)
+    );
 
     // RequestedCertificate BOOLEAN
     const requestedCertificate = new DERElement();
@@ -89,9 +98,5 @@ export class TimeStampRequest {
     const randomBytes = new Uint8Array(8);
     this.getRandomValues(randomBytes);
     return randomBytes;
-  }
-
-  uint8tohex(uint8: Uint8Array): string {
-    return Array.prototype.map.call(uint8, (x) => ('00' + x.toString(16)).slice(-2)).join('');
   }
 }

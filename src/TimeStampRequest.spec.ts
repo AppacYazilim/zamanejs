@@ -1,5 +1,6 @@
 import { TimeStampRequest } from './TimeStampRequest';
 import { Zamane } from './zamane';
+import { ASN1UniversalType, DERElement } from 'asn1-ts';
 
 import { execSync } from 'child_process';
 
@@ -77,4 +78,28 @@ describe('TimeStampRequest Tests', () => {
     }
     expect(allZeros).toBe(false);
   });
+
+  it.each([
+    { bytes: [0, 0, 0, 0, 0, 0, 0, 1], encoded: [1] },
+    { bytes: [0x80, 0, 0, 0, 0, 0, 0, 1], encoded: [0, 0x80, 0, 0, 0, 0, 0, 0, 1] },
+    { bytes: [0, 0xff, 0, 0, 0, 0, 0, 1], encoded: [0, 0xff, 0, 0, 0, 0, 0, 1] }
+  ])('encodes nonce bytes as a positive, minimal DER INTEGER: %j', ({ bytes, encoded }) => {
+    const payload = new TimeStampRequest('SHA-256', new Uint8Array(32), new Uint8Array(bytes)).getAsn1Payload();
+    const request = new DERElement();
+    request.fromBytes(payload);
+    const nonce = request.sequence[2];
+
+    expect(nonce.tagNumber).toBe(ASN1UniversalType.integer);
+    expect(Array.from(nonce.value)).toEqual(encoded);
+    expect(BigInt(nonce.integer)).toBe(BigInt('0x' + Buffer.from(bytes).toString('hex')));
+  });
+
+  it.each([new Uint8Array(0), new Uint8Array(7), new Uint8Array(33), null, '12345678', [1, 2, 3, 4, 5, 6, 7, 8]])(
+    'rejects an invalid nonce before encoding: %j',
+    (nonce) => {
+      expect(() => new TimeStampRequest('SHA-256', new Uint8Array(32), nonce as Uint8Array)).toThrow(
+        'Nonce must be a Uint8Array containing 8 to 32 bytes'
+      );
+    }
+  );
 });

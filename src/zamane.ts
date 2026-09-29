@@ -113,7 +113,7 @@ export class Zamane {
     return new Uint8Array(hash.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
   }
 
-  public async timeStampRequest(hash: Uint8Array): Promise<Buffer> {
+  public async timeStampRequest(hash: Uint8Array, nonce?: Uint8Array): Promise<Buffer> {
     const expectedLength = hashByteLength[this.hashAlgorithm];
 
     if (hash.length !== expectedLength) {
@@ -121,7 +121,7 @@ export class Zamane {
     }
 
     // create a new TimeStampRequest
-    const request = new TimeStampRequest(this.hashAlgorithm, hash);
+    const request = new TimeStampRequest(this.hashAlgorithm, hash, nonce);
     // get the ASN.1 payload
     const payload = request.getAsn1Payload();
     // send the request to the TSS server

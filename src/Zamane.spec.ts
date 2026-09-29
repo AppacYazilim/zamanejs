@@ -54,6 +54,17 @@ describe('Zamane requests', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
+  it.each([new Uint8Array(7), new Uint8Array(33), null, '12345678'])(
+    'rejects an invalid public nonce before sending: %j',
+    async (nonce) => {
+      const hash = await new Zamane(credentials).hashFromString('test');
+      await expect(new Zamane(credentials).timeStampRequest(hash, nonce as Uint8Array)).rejects.toThrow(
+        'Nonce must be a Uint8Array containing 8 to 32 bytes'
+      );
+      expect(send).not.toHaveBeenCalled();
+    }
+  );
+
   it.each([
     { customerNo: '12345' },
     { customerPassword: 'test-only' },
