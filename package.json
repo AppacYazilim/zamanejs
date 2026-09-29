@@ -50,7 +50,7 @@
     "@semantic-release/github": "^10.0.2",
     "@semantic-release/npm": "13.1.1",
     "@semantic-release/release-notes-generator": "^14.0.1",
-    "@swc/cli": "^0.3.10",
+    "@swc/cli": "^0.4.0",
     "@swc/core": "^1.4.6",
     "@swc/jest": "^0.2.36",
     "@types/hasbin": "^1.2.0",
