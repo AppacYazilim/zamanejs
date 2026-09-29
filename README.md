@@ -13,9 +13,6 @@ ZamaneJS is a JavaScript implementation of the Zamane timestamping service. It p
 [![GitHub Repo stars](https://img.shields.io/github/stars/AppacYazilim/zamanejs?style=social)](https://github.com/AppacYazilim/zamanejs/stargazers)
 
 
-I'n theory this is just a basic implementation of RFC3161 but since there are some small changes 
-necessary for Zamane to work, I've decided to create a separate package. See [ZamaneFix](src/utils/zamaneZdFix.ts) file for the details.
-
 ## Zamane
 
 Zamane is an app written by TUBITAK for Turkish goverment that creates timestamps for given files. These timestamps could be used in court to prove as evidence that file or document existed at the claimed time.  

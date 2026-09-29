@@ -1,8 +1,6 @@
 # ZamaneJS
 ZamaneJS, Zamane zaman damgası servisinin bir JavaScript uygulamasıdır. Zamane servisiyle etkileşim için basit ve kolay kullanımlı bir API sunar.
 
-Teoride bu sadece RFC3161'in temel bir uygulamasıdır fakat Zamane'nin çalışabilmesi için bazı küçük değişiklikler gerekli olduğundan, ayrı bir paket oluşturmaya karar verdim. Detaylar için [ZamaneFix](src/utils/zamaneZdFix.ts) dosyasına bakınız.
-
 ## Zamane
 
 Zamane, TÜBİTAK tarafından Türk hükümeti için yazılmış, verilen dosyalar için zaman damgaları oluşturan bir uygulamadır. Bu zaman damgaları, mahkemede bir dosya veya belgenin iddia edilen zamanda mevcut olduğunu kanıtlamak için kullanılabilir.
