@@ -102,13 +102,37 @@ import { randomBytes } from 'node:crypto';
 const nonce = randomBytes(16);
 await saveNonce(nonce); // İstekten önce veri özetiyle birlikte saklayın.
 const timestamp = await zamane.timeStampRequest(hash, nonce);
-// RFC 3161 yanıtını çözümleyip nonce değerini kaydedilen değerle karşılaştırın.
+// Dönen yanıtın nonce, özet ve imza kontrolleri yapılmıştır.
 ```
 
 Nonce, işaretsiz RFC 3161 INTEGER olarak kodlanır. DER gereksiz baştaki sıfırları
 atar ve gerektiğinde pozitif işaret baytı ekler. Verilen baytlar sıfırla
 başlıyorsa çözülmüş tamsayı değerlerini karşılaştırın. İkinci parametre
-verilmezse nonce otomatik üretilir. Metot ham yanıtı yine `Buffer` olarak döndürür.
+verilmezse nonce otomatik üretilir ve yanıtta doğrulanır. Metot ham yanıtı yine
+`Buffer` olarak döndürür.
+
+### Zaman damgası doğrulaması ve isteğe bağlı CA
+
+`timeStampRequest` yanıtı döndürmeden önce RFC 3161 durumunu, SHA-256 veya
+SHA-512 özetini, nonce değerini, CMS imzasını, imzacı sertifikası bağını ve
+sertifikanın kritik zaman damgalama kullanımını denetler. Başarısız doğrulama
+`TimeStampVerificationError` üretir.
+
+Sertifika zincirini de zorunlu kılmak için güvenilen TSA CA sertifikasını verin:
+
+```javascript
+import { readFileSync } from 'node:fs';
+
+const ca = readFileSync('trusted-tsa-root.pem');
+const timestamp = await zamane.timeStampRequest(hash, nonce, { ca });
+```
+
+`ca` PEM metni, PEM sertifika demeti veya DER baytları olabilir. CA verilmezse
+imza, yanıtın içindeki imzacı sertifikasıyla kriptografik olarak doğrulanır;
+ancak imzacının **güvenilir kimliği doğrulanmış sayılmaz**. CA sertifikasını
+bağımsız ve güvenilir bir kaynaktan sağlayın. İptal durumu otomatik olarak
+sorgulanmaz; TSA politikası ve zamanının kabul edilebilirliği uygulama
+tarafından değerlendirilmelidir.
 
 ### Kimlik doğrulama ve bağlantı hataları
 
@@ -125,9 +149,8 @@ yanıtları ve kesilen/zaman aşımına uğrayan istekleri reddeder. Yönlendirm
 izlenmez. Yanıt hataları dışa aktarılan `TssRequestError` ile, mevcutsa
 `statusCode` alanıyla döner. Hatalara yanıt gövdesi veya hesap bilgileri eklenmez.
 
-Dönen Buffer ham RFC 3161 yanıtıdır; **doğrulanmış zaman damgası değildir**.
-Kanıt olarak kullanılmadan önce RFC 3161 durumu, veri özeti, nonce, imza ve
-sertifika güveni ayrıca doğrulanmalıdır.
+Dönen Buffer orijinal RFC 3161 yanıt baytlarını içerir. Uygulama güvenilir TSA
+kimliği istiyorsa `ca` vermelidir.
 
 ## Lisans
 

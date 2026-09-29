@@ -1,0 +1,1 @@
+Synthetic RFC 3161 fixture for ZamaneJS verification tests.

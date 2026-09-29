@@ -3,6 +3,12 @@ import { AddressInfo } from 'node:net';
 import { ASN1UniversalType, DERElement } from 'asn1-ts';
 import { Zamane } from './zamane';
 
+// This suite inspects the outgoing DER and HTTP transport; signed replies are covered separately.
+jest.mock('./TimeStampVerification', () => ({
+  ...jest.requireActual('./TimeStampVerification'),
+  verifyTimeStampResponse: jest.fn().mockResolvedValue(undefined)
+}));
+
 const timestampReply = Buffer.from([0x30, 0x05, 0x30, 0x03, 0x02, 0x01, 0x00]);
 
 describe('nonce over a local HTTP TSA', () => {

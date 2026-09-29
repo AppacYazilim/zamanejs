@@ -5,6 +5,10 @@ import { tssRequest } from './http_utils';
 import { DERElement } from 'asn1-ts';
 
 jest.mock('./http_utils', () => ({ tssRequest: jest.fn() }));
+jest.mock('./TimeStampVerification', () => ({
+  ...jest.requireActual('./TimeStampVerification'),
+  verifyTimeStampResponse: jest.fn().mockResolvedValue(undefined)
+}));
 const send = jest.mocked(tssRequest);
 const credentials = {
   hashAlgorithm: 'SHA-256',

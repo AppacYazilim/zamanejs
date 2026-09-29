@@ -11,7 +11,11 @@ import { hashAlgorithmNodeJS, hashByteLength, HashingAlgorithm } from './hashing
 import { TimeStampRequest } from './TimeStampRequest';
 import { tssRequest } from './http_utils';
 import { HashLengthError } from './errors/HashLengthError';
+import { prepareTimeStampCa, verifyTimeStampResponse } from './TimeStampVerification';
+import type { TimeStampVerificationOptions } from './TimeStampVerification';
 export { TssRequestError } from './errors/TssRequestError';
+export { TimeStampVerificationError } from './TimeStampVerification';
+export type { TimeStampVerificationOptions } from './TimeStampVerification';
 
 export class Zamane {
   private readonly hashAlgorithm: HashingAlgorithm;
@@ -113,24 +117,32 @@ export class Zamane {
     return new Uint8Array(hash.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
   }
 
-  public async timeStampRequest(hash: Uint8Array, nonce?: Uint8Array): Promise<Buffer> {
+  public async timeStampRequest(
+    hash: Uint8Array,
+    nonce?: Uint8Array,
+    verification: TimeStampVerificationOptions = {}
+  ): Promise<Buffer> {
     const expectedLength = hashByteLength[this.hashAlgorithm];
 
     if (hash.length !== expectedLength) {
       throw new HashLengthError(hash, expectedLength);
     }
 
+    const trustedCas = prepareTimeStampCa(verification.ca);
+    const expectedHash = Uint8Array.from(hash);
     // create a new TimeStampRequest
-    const request = new TimeStampRequest(this.hashAlgorithm, hash, nonce);
+    const request = new TimeStampRequest(this.hashAlgorithm, expectedHash, nonce);
     // get the ASN.1 payload
     const payload = request.getAsn1Payload();
     // send the request to the TSS server
-    return await tssRequest(this.credentials.tssAddress, Buffer.from(payload), {
+    const response = await tssRequest(this.credentials.tssAddress, Buffer.from(payload), {
       authentication:
         'customerNo' in this.credentials && 'customerPassword' in this.credentials
           ? { customerNo: this.credentials.customerNo, customerPassword: this.credentials.customerPassword }
           : undefined,
       timeoutMs: this.credentials.requestTimeoutMs
     });
+    await verifyTimeStampResponse(response, expectedHash, request.getNonce(), this.hashAlgorithm, trustedCas);
+    return response;
   }
 }
