@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/AppacYazilim/zamanejs/compare/v2.0.9...v2.1.0) (2026-09-29)
+
+
+### Features
+
+* allow callers to supply an RFC 3161 request nonce ([#116](https://github.com/AppacYazilim/zamanejs/issues/116)) ([6a2bb16](https://github.com/AppacYazilim/zamanejs/commit/6a2bb16644f8e6fae3107c548eec465040b1dba3))
+
 ## [2.0.9](https://github.com/AppacYazilim/zamanejs/compare/v2.0.8...v2.0.9) (2026-09-16)
 
 
