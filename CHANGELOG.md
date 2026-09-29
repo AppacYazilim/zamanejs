@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/AppacYazilim/zamanejs/compare/v2.1.0...v2.2.0) (2026-09-29)
+
+
+### Features
+
+* verify RFC 3161 timestamp responses ([#118](https://github.com/AppacYazilim/zamanejs/issues/118)) ([2a7f0ba](https://github.com/AppacYazilim/zamanejs/commit/2a7f0ba23ef6548e4a6dab754628004e589211bb))
+
 # [2.1.0](https://github.com/AppacYazilim/zamanejs/compare/v2.0.9...v2.1.0) (2026-09-29)
 
 
